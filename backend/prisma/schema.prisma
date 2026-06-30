@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AlertStatus {
+  active
+  triggered
+  cancelled
+}
+
+
+model Users{
+  id String @id @default(uuid())
+  email String @unique
+  password_hash String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  userProducts UserProducts[]
+  alert  Alerts[]
+
+}
+
+model Products{
+  id String @id @default(uuid())
+  asin String @unique
+  title String 
+  image_url String?
+  amazon_url String
+  category String
+  current_price Int
+  currency String
+  last_synced String
+  created_at DateTime @default(now())
+
+  priceHistory PriceHistory[]
+  userProduct  UserProducts[]
+  alert  Alerts[]
+  deals Deals[]
+
+}
+
+model PriceHistory{
+  id String @id @default(uuid())
+  product Products @relation(fields: [product_id],references: [id])
+  product_id String
+  price Int
+  recorded_at DateTime
+  source String @default("Keppa")
+
+  @@unique([product_id,recorded_at])// one price per product per day
+
+}
+
+model UserProducts{
+  id String @id @default(uuid())
+  user_id String
+  user Users @relation(fields: [user_id],references: [id])
+  product_id String
+  product Products @relation(fields: [product_id],references: [id])
+
+  @@unique([user_id,product_id])// User le Track button dherai choti click gare pani naya row banaudaina.
+// Kinabhane usle yo product pahilai track gardai cha.
+}
+
+model Alerts{
+  id String @id @default(uuid())
+  user Users @relation(fields: [user_id],references: [id])
+  user_id String
+  product Products @relation(fields: [product_id],references: [id])
+  product_id String
+  targeted_price Int
+  status AlertStatus @default(active)
+
+  triggered_at DateTime
+  created_at DateTime @default(now())
+}
+
+model Deals{
+  id String @id @default(uuid())
+  product_id String
+  product Products @relation(fields: [product_id],references: [id])
+  claimed_discount Int
+  real_discount Int
+  is_verified Boolean
+  expires_at DateTime
+  is_active Boolean @default(true)
+  created_at DateTime @default(now())
+}
