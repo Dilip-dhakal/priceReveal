@@ -1,6 +1,7 @@
 import { RequestHandler } from "express";
 import { ErrorHandler } from "../errors/error.handler.js";
 import jwt from "jsonwebtoken";
+import { JwtUserPayload } from "../types/jwtUserPayload.js";
 
 export const authMiddleware:RequestHandler=(req,res,next)=>{
     const authHeader=req.headers.authorization
@@ -18,10 +19,6 @@ const decoded = jwt.verify(
     token,
     process.env.JWT_SECRET!
 );
-req.user = decoded as {
-    id: string;
-    email: string;
-    role: string;
-};
+req.user = decoded as JwtUserPayload
 next()
 }
